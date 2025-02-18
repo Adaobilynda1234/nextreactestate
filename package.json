@@ -9,14 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.11.3",
-    "mongodb": "^6.13.0",
-    "mongoose": "^8.10.1",
+    "@clerk/nextjs": "^5.7.0",
+    "mongodb": "^6.11.0",
+    "mongoose": "^8.8.4",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
-    "svix": "^1.57.0"
+    "svix": "^1.43.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
