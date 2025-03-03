@@ -1,27 +1,19 @@
 "use client";
-
-import { useState } from "react";
-
-import { app } from "../../firebase";
-
+import { useEffect, useState } from "react";
 import {
+  getDownloadURL,
   getStorage,
   ref,
   uploadBytesResumable,
-  getDownloadURL,
 } from "firebase/storage";
-
+import { app } from "../../../firebase";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-
-export default function CreateListing() {
+import { useRouter, usePathname } from "next/navigation";
+export default function UpdateListing() {
   const { isSignedIn, user, isLoaded } = useUser();
   const [files, setFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [imageUploadError, setImageUploadError] = useState(false);
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const pathname = usePathname();
+  const listingId = pathname.split("/").pop();
   const [formData, setFormData] = useState({
     imageUrls: [],
     name: "",
@@ -36,9 +28,31 @@ export default function CreateListing() {
     parking: false,
     furnished: false,
   });
-
-  console.log(formData);
-
+  useEffect(() => {
+    const fetchListing = async () => {
+      const res = await fetch("/api/listing/get", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        console.log(data.message);
+        return;
+      }
+      setFormData(data[0]);
+    };
+    fetchListing();
+  }, []);
+  const [imageUploadError, setImageUploadError] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const handleImageSubmit = (e) => {
     if (files.length > 0 && files.length + formData.imageUrls.length < 7) {
       setUploading(true);
@@ -65,7 +79,6 @@ export default function CreateListing() {
       setUploading(false);
     }
   };
-
   const storeImage = async (file) => {
     return new Promise((resolve, reject) => {
       const storage = getStorage(app);
@@ -90,14 +103,12 @@ export default function CreateListing() {
       );
     });
   };
-
   const handleRemoveImage = (index) => {
     setFormData({
       ...formData,
       imageUrls: formData.imageUrls.filter((_, i) => i !== index),
     });
   };
-
   const handleChange = (e) => {
     if (e.target.id === "sale" || e.target.id === "rent") {
       setFormData({
@@ -126,7 +137,6 @@ export default function CreateListing() {
       });
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -136,7 +146,7 @@ export default function CreateListing() {
         return setError("Discount price must be lower than regular price");
       setLoading(true);
       setError(false);
-      const res = await fetch("/api/listing/create", {
+      const res = await fetch("/api/listing/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,6 +154,7 @@ export default function CreateListing() {
         body: JSON.stringify({
           ...formData,
           userMongoId: user.publicMetadata.userMogoId,
+          listingId,
         }),
       });
       const data = await res.json();
@@ -157,7 +168,6 @@ export default function CreateListing() {
       setLoading(false);
     }
   };
-
   if (!isLoaded) {
     return (
       <h1 className="text-center text-xl my-7 font-semibold">Loading...</h1>
@@ -170,13 +180,12 @@ export default function CreateListing() {
       </h1>
     );
   }
-
   return (
     <main className="p-3 max-w-4xl mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">
-        Create a Listing
+        Update a Listing
       </h1>
-      <form className="flex flex-col sm:flex-row gap-4" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
         <div className="flex flex-col gap-4 flex-1">
           <input
             type="text"
@@ -290,10 +299,10 @@ export default function CreateListing() {
               <input
                 type="number"
                 id="regularPrice"
-                min="50"
-                max="10000000"
                 required
                 className="p-3 border border-gray-300 rounded-lg"
+                min="50"
+                max="10000000"
                 onChange={handleChange}
                 value={formData.regularPrice}
               />
@@ -331,14 +340,12 @@ export default function CreateListing() {
           </p>
           <div className="flex gap-4">
             <input
+              onChange={(e) => setFiles(e.target.files)}
               className="p-3 border border-gray-300 rounded w-full"
               type="file"
               id="images"
               accept="image/*"
               multiple
-              onChange={(e) => {
-                setFiles(e.target.files);
-              }}
             />
             <button
               disabled={uploading}
@@ -372,10 +379,10 @@ export default function CreateListing() {
               </div>
             ))}
           <button
-            className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
             disabled={loading || uploading}
+            className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
           >
-            {loading ? "Creating..." : "Create Listing"}
+            {loading ? "Updating..." : "Update listing"}
           </button>
           {error && <p className="text-red-700 text-sm">{error}</p>}
         </div>
