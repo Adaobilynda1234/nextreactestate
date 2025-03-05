@@ -16,8 +16,10 @@ export default async function Listing({ params }) {
     });
     const data = await result.json();
     listing = data[0];
+    console.log("Fetched data:", listing);
   } catch (error) {
     listing = { title: "Failed to load listing" };
+    console.log("Fetched data:", listing);
   }
   if (!listing || listing.name === "Failed to load listing") {
     return (
