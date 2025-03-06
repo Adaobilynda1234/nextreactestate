@@ -19,7 +19,7 @@ export default function About() {
         {/* Mission & Vision Section */}
         <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
           <div className="rounded-lg shadow-xl overflow-hidden">
-            <div className="h-64 bg-slate-300 bg-[url('/Teamimage.jpg.jpg')] bg-cover bg-center"></div>
+            <div className="h-64 bg-slate-300 bg-[url('/Teamimage.jpg')] bg-cover bg-center"></div>
           </div>
           <div>
             <h2 className="text-3xl font-semibold text-slate-800 mb-6 relative">
