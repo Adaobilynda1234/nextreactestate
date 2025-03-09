@@ -9,7 +9,9 @@ import {
   FaPhone,
   FaCalendarAlt,
   FaEnvelope,
-  FaUser
+  FaUser,
+  FaTimes,
+  FaVideo
 } from "react-icons/fa";
 import { useState } from "react";
 
@@ -20,10 +22,50 @@ export default function ListingDetails({ listing }) {
     phone: "",
     message: `I'm interested in this ${listing.type === "rent" ? "rental" : "property"}. Please contact me with more information.`
   });
+  
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [meetingData, setMeetingData] = useState({
+    name: "",
+    email: "",
+    date: "",
+    time: "",
+    notes: `I'd like to schedule a viewing for ${listing.name} at ${listing.address}.`
+  });
+  
+  const adminPhone = "(080) 456-7890"; // You can replace this with your actual admin phone
+  const availableTimes = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+  
+  // Generate dates for the next 14 days
+  const generateAvailableDates = () => {
+    const dates = [];
+    const today = new Date();
+    
+    for (let i = 1; i <= 14; i++) {
+      const nextDate = new Date(today);
+      nextDate.setDate(today.getDate() + i);
+      // Skip weekends (0 is Sunday, 6 is Saturday)
+      const day = nextDate.getDay();
+      if (day !== 0 && day !== 6) {
+        const formattedDate = nextDate.toISOString().split('T')[0];
+        dates.push(formattedDate);
+      }
+    }
+    
+    return dates;
+  };
+  
+  const availableDates = generateAvailableDates();
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
+      [e.target.id]: e.target.value
+    });
+  };
+
+  const handleMeetingChange = (e) => {
+    setMeetingData({
+      ...meetingData,
       [e.target.id]: e.target.value
     });
   };
@@ -44,6 +86,50 @@ export default function ListingDetails({ listing }) {
     });
   };
 
+  const handleMeetingSubmit = (e) => {
+    e.preventDefault();
+    // Here you would handle the meeting request
+    console.log("Meeting requested:", meetingData);
+    
+    // Create Google Meet link (this would typically be done server-side)
+    const googleMeetLink = "https://meet.google.com/new";
+    
+    // Format the meeting details for email
+    const subject = encodeURIComponent(`Property Viewing: ${listing.name}`);
+    const body = encodeURIComponent(
+      `Name: ${meetingData.name}\n` +
+      `Email: ${meetingData.email}\n` +
+      `Date: ${meetingData.date}\n` +
+      `Time: ${meetingData.time}\n` +
+      `Property: ${listing.name} at ${listing.address}\n\n` +
+      `Notes: ${meetingData.notes}\n\n` +
+      `Google Meet Link: ${googleMeetLink}`
+    );
+    
+    // Open email client with pre-filled details
+    window.open(`mailto:agent@realestate.com?subject=${subject}&body=${body}`);
+    
+    alert("Meeting request sent! The agent will confirm your Google Meet appointment shortly.");
+    setShowMeetingModal(false);
+    
+    // Reset form
+    setMeetingData({
+      name: "",
+      email: "",
+      date: "",
+      time: "",
+      notes: `I'd like to schedule a viewing for ${listing.name} at ${listing.address}.`
+    });
+  };
+
+  const openMeetingModal = () => {
+    setShowMeetingModal(true);
+  };
+
+  const closeMeetingModal = () => {
+    setShowMeetingModal(false);
+  };
+
   return (
     <main className="bg-gray-50">
       {/* Image Gallery Section */}
@@ -53,7 +139,20 @@ export default function ListingDetails({ listing }) {
           alt={listing.name}
           className="w-full h-[500px] object-cover"
         />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent h-32"></div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent h-32">
+          <div className="max-w-6xl mx-auto px-4 pt-16">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <span className="bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                {listing.type === "rent" ? "For Rent" : "For Sale"}
+              </span>
+              {listing.offer && (
+                <span className="bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                  ${+listing.regularPrice - +listing.discountPrice} OFF
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -73,16 +172,6 @@ export default function ListingDetails({ listing }) {
                   </p>
                 </div>
                 <div className="flex flex-col items-start md:items-end">
-                  <div className="flex gap-2 mb-2">
-                    <span className="bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
-                      {listing.type === "rent" ? "For Rent" : "For Sale"}
-                    </span>
-                    {listing.offer && (
-                      <span className="bg-green-600 text-white text-sm font-semibold px-3 py-1 rounded-full">
-                        ${+listing.regularPrice - +listing.discountPrice} OFF
-                      </span>
-                    )}
-                  </div>
                   <p className="text-3xl font-bold text-slate-800">
                     ${listing.offer
                       ? listing.discountPrice.toLocaleString("en-US")
@@ -94,25 +183,25 @@ export default function ListingDetails({ listing }) {
 
               {/* Property Features */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-b border-gray-100">
-                <div className="flex flex-col items-center text-center p-3">
+                <div className="flex flex-col items-center text-center p-3 hover:bg-blue-50 rounded-lg transition-colors">
                   <FaBed className="text-2xl text-blue-600 mb-2" />
                   <span className="font-semibold text-slate-700">
                     {listing.bedrooms} {listing.bedrooms > 1 ? "Bedrooms" : "Bedroom"}
                   </span>
                 </div>
-                <div className="flex flex-col items-center text-center p-3">
+                <div className="flex flex-col items-center text-center p-3 hover:bg-blue-50 rounded-lg transition-colors">
                   <FaBath className="text-2xl text-blue-600 mb-2" />
                   <span className="font-semibold text-slate-700">
                     {listing.bathrooms} {listing.bathrooms > 1 ? "Bathrooms" : "Bathroom"}
                   </span>
                 </div>
-                <div className="flex flex-col items-center text-center p-3">
+                <div className="flex flex-col items-center text-center p-3 hover:bg-blue-50 rounded-lg transition-colors">
                   <FaParking className="text-2xl text-blue-600 mb-2" />
                   <span className="font-semibold text-slate-700">
                     {listing.parking ? "Parking Available" : "No Parking"}
                   </span>
                 </div>
-                <div className="flex flex-col items-center text-center p-3">
+                <div className="flex flex-col items-center text-center p-3 hover:bg-blue-50 rounded-lg transition-colors">
                   <FaChair className="text-2xl text-blue-600 mb-2" />
                   <span className="font-semibold text-slate-700">
                     {listing.furnished ? "Furnished" : "Unfurnished"}
@@ -160,17 +249,17 @@ export default function ListingDetails({ listing }) {
                   </div>
                 </div>
                 <a 
-                  href="tel:+1234567890" 
+                  href={`tel:${adminPhone}`} 
                   className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium w-full mb-3 transition-colors"
                 >
-                  <FaPhone /> Call: (080) 456-7890
+                  <FaPhone /> Call: {adminPhone}
                 </a>
-                <a 
-                  href="#schedule" 
+                <button 
+                  onClick={openMeetingModal}
                   className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium w-full transition-colors"
                 >
-                  <FaCalendarAlt /> Schedule a Viewing
-                </a>
+                  <FaVideo /> Schedule Virtual Viewing
+                </button>
               </div>
               
               {/* Inquiry Form */}
@@ -237,6 +326,101 @@ export default function ListingDetails({ listing }) {
           </div>
         </div>
       </div>
+
+      {/* Google Meet Scheduling Modal */}
+      {showMeetingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-xl font-bold text-slate-800">Schedule a Virtual Viewing</h3>
+              <button onClick={closeMeetingModal} className="text-slate-500 hover:text-slate-800">
+                <FaTimes className="text-xl" />
+              </button>
+            </div>
+            <div className="p-4">
+              <form onSubmit={handleMeetingSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={meetingData.name}
+                    onChange={handleMeetingChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    placeholder="Your name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={meetingData.email}
+                    onChange={handleMeetingChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    placeholder="Your email address"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
+                  <select
+                    id="date"
+                    value={meetingData.date}
+                    onChange={handleMeetingChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select a date</option>
+                    {availableDates.map((date) => (
+                      <option key={date} value={date}>
+                        {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                  <select
+                    id="time"
+                    value={meetingData.time}
+                    onChange={handleMeetingChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select a time</option>
+                    {availableTimes.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+                  <textarea
+                    id="notes"
+                    rows="3"
+                    value={meetingData.notes}
+                    onChange={handleMeetingChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    placeholder="Any specific questions or requirements for the viewing?"
+                  ></textarea>
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium w-full transition-colors"
+                  >
+                    <FaVideo /> Request Google Meet Viewing
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
