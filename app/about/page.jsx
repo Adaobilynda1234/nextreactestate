@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function About() {
   return (
     <div className="bg-gradient-to-b from-white to-gray-100 min-h-screen">
@@ -148,8 +149,8 @@ export default function About() {
           </p>
 
           <div className="mt-8 flex justify-center">
-            <button className="bg-amber-500 hover:bg-amber-600 text-white py-3 px-8 rounded-full font-medium transition-colors duration-300 inline-flex items-center">
-              Meet Our Agents
+            <Link href ="/create-listing" className="bg-amber-500 hover:bg-amber-600 text-white py-3 px-8 rounded-full font-medium transition-colors duration-300 inline-flex items-center">
+              create house listings
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 ml-2"
@@ -162,7 +163,7 @@ export default function About() {
                   clipRule="evenodd"
                 />
               </svg>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
