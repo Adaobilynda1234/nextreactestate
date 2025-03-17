@@ -166,7 +166,8 @@ export default function CreateListing() {
   if (!isSignedIn) {
     return (
       <h1 className="text-center text-xl my-7 font-semibold">
-        You are not authorized to view this page
+        You are not authorized to use this page,please Log in or Sign up to
+        create a listing
       </h1>
     );
   }
